@@ -18,12 +18,10 @@ Patch5:		%{name}-manpage.patch
 Patch6:		%{name}-rescan.patch
 Patch7:		%{name}-syslog.patch
 Patch8:		%{name}-pidfile.patch
-BuildRoot:	%{_tmppath}/%{name}-buildroot
 Requires(pre):  /sbin/chkconfig
 Requires(pre):	rpm-helper
 Requires:	procps, udev
 
-buildroot: 	%{_tmppath}/%{name}-buildroot
 %description
 A program that will allows the keyboard to send mouse events.
 It can be used to configure right, middle and scroll buttons via 
