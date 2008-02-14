@@ -4,6 +4,7 @@ Version:	0.15
 Release:	%mkrel 2
 License:	GPL
 Group:		System/Configuration/Hardware
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:		http://www.geekounet.org/powerbook/files
 Source0:	http://www.geekounet.org/powerbook/files/%{name}-%{version}.tar.bz2
 Source1:	%{name}.init
