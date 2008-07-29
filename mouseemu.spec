@@ -1,7 +1,7 @@
 Summary:	Program that emulates mouse clicks
 Name:		mouseemu
 Version:	0.15
-Release:	%mkrel 2
+Release:	%mkrel 4
 License:	GPL
 Group:		System/Configuration/Hardware
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
