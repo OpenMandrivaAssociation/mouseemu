@@ -1,0 +1,221 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 62_syslog.dpatch.dpatch by Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: log to syslog instead of stderr
+diff -urNad mouseemu-0.15-3~/mouseemu.8 mouseemu-0.15-3/mouseemu.8
+--- mouseemu-0.15-3~/mouseemu.8	2006-03-14 01:45:12.704625933 +0100
++++ mouseemu-0.15-3/mouseemu.8	2006-03-14 01:45:12.000000000 +0100
+@@ -56,6 +56,9 @@
+ Automatically scan every 5s for new devices. This is normally not need, as udev should
+ inform mouseemu about new devices.
+ .TP
++.B -debug
++print debugging messages about device scans
++.TP
+ .B -help
+ show usage message
+ .PP
+diff -urNad mouseemu-0.15-3~/mouseemu.c mouseemu-0.15-3/mouseemu.c
+--- mouseemu-0.15-3~/mouseemu.c	2006-03-14 01:45:12.708625933 +0100
++++ mouseemu-0.15-3/mouseemu.c	2006-03-14 01:46:14.000000000 +0100
+@@ -18,12 +18,14 @@
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <stdarg.h>
+ #include <unistd.h>
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <string.h>
+ #include <signal.h>
+ #include <wait.h>
++#include <syslog.h>
+ #include <sys/time.h>
+ #include <linux/input.h>
+ #include <linux/uinput.h>
+@@ -68,6 +70,17 @@
+ 	}
+ }
+ 
++/* print debug messages to syslog or stderr */
++void debugf(const char *format, ...) {
++	va_list ap;
++	
++	if (debug) {
++		va_start(ap, format);	
++		vsyslog(LOG_DEBUG, format, ap);
++		va_end(ap);
++	}
++}
++
+ static void send_event(int fd, int type, int code, int value)
+ {
+ 	struct input_event event;
+@@ -256,7 +247,7 @@
+ 						unregister_inputhandler(eventdevs[m].handle);
+ 						close(eventdevs[m].handle);
+ 					}
+-					if (debug) fprintf(stderr, "keyboard: fd %d event%d, vendor %4x product %4x\n", fd, n, id[ID_VENDOR], id[ID_PRODUCT]);
++					debugf("keyboard: fd %d event%d, vendor %4x product %4x\n", fd, n, id[ID_VENDOR], id[ID_PRODUCT]);
+ 					eventdevs[m].handle= fd;
+ 					eventdevs[m].product = id[ID_PRODUCT];
+ 					eventdevs[m].vendor = id[ID_VENDOR];
+@@ -276,7 +267,7 @@
+ 						unregister_inputhandler(eventdevs[m].handle);
+ 						close(eventdevs[m].handle);
+ 					}
+-					if (debug) fprintf(stderr, "mouse   : fd %d event%d, vendor %4x product %4x\n", fd, n, id[ID_VENDOR], id[ID_PRODUCT]);
++					debugf("mouse   : fd %d event%d, vendor %4x product %4x\n", fd, n, id[ID_VENDOR], id[ID_PRODUCT]);
+ 					eventdevs[m].handle= fd;
+ 					eventdevs[m].product = id[ID_PRODUCT];
+ 					eventdevs[m].vendor = id[ID_VENDOR];
+@@ -388,27 +379,27 @@
+ {
+ 	int fd = -1;
+ 
+-	printf("Trying to open %s...", uinputdev);
++	syslog(LOG_NOTICE, "Trying to open %s...", uinputdev);
+ 	fd = open (uinputdev, O_RDWR);
+-	printf(" %s.\n", (fd > 0)?"ok":"error");
++	syslog(LOG_NOTICE, " %s.\n", (fd > 0)?"ok":"error");
+ 	if (fd > 0)
+ 		return fd;
+ 
+-	printf("Trying to open /dev/uinput...");
++	syslog(LOG_NOTICE, "Trying to open /dev/uinput...");
+ 	fd = open("/dev/uinput", O_RDWR);
+-	printf(" %s.\n", (fd > 0)?"ok":"error");
++	syslog(LOG_NOTICE, " %s.\n", (fd > 0)?"ok":"error");
+ 	if (fd > 0)
+ 		return fd;
+ 
+-	printf("Trying to open /dev/input/uinput...");
++	syslog(LOG_NOTICE, "Trying to open /dev/input/uinput...");
+ 	fd = open("/dev/input/uinput", O_RDWR);
+-	printf(" %s.\n", (fd > 0)?"ok":"error");
++	syslog(LOG_NOTICE, " %s.\n", (fd > 0)?"ok":"error");
+ 	if (fd > 0)
+ 		return fd;
+ 
+-	printf("Trying to open /dev/misc/uinput...");
++	syslog(LOG_NOTICE, "Trying to open /dev/misc/uinput...");
+ 	fd = open("/dev/misc/uinput", O_RDWR);
+-	printf(" %s.\n", (fd > 0)?"ok":"error");
++	syslog(LOG_NOTICE, " %s.\n", (fd > 0)?"ok":"error");
+ 	if (fd > 0)
+ 		return fd;
+ 
+@@ -514,7 +505,7 @@
+ {
+ 	int i, cfd;
+ 	
+-	printf("mouseemu: cleaning...\n");
++	syslog(LOG_NOTICE, "mouseemu: cleaning...\n");
+ 
+         uinput_close(ui_keyb_fd);
+         uinput_close(ui_mouse_fd);
+@@ -590,7 +581,8 @@
+ 	                "\t[-typing-block DELAY]\n"
+ 	                "\t[-device UINPUT_DEVICE]\n"
+ 	                "\t[-nofork]\n"
+-			"\t[-autorescan]\n",
++			"\t[-autorescan]\n"
++			"\t[-debug]\n",
+ 					argv[0]);
+ 	fprintf(stream, "All modifier and button key arguments are\n"
+ 	                "key scancodes. They can be found in \n"
+@@ -622,8 +614,6 @@
+ 	int nofork = 0;
+ 	//int argv0size = strlen(argv[0]);
+ 
+-	printf("mouseemu " VERSION " (C) Colin Leroy <colin@colino.net>\n");
+-
+ 	install_sighandler();
+ 
+ 	uinputdev = DEFAULT_UINPUT;
+@@ -685,23 +675,33 @@
+ 					autorescan=1;
+ 					i += 1;
+ 					continue;
++				}
++				else if (!strcmp(argv[i], "-debug")) {
++					debug=1;
++					i += 1;
++					continue;
+ 				} else {
+ 					usage(stderr, argv);
+                 }
+ 			}
+ 		}
+ 	}
+-	printf("using (%d+%d) as middle button, (%d+%d) as right button, (%d) as scroll.\n",
++	
++	if (nofork) 
++		openlog("mouseemu", LOG_NDELAY | LOG_PERROR | LOG_PID, LOG_DAEMON); 
++	else
++		openlog("mouseemu", LOG_NDELAY | LOG_PID, LOG_DAEMON);
++	
++	syslog(LOG_NOTICE, "mouseemu " VERSION " (C) Colin Leroy <colin@colino.net>\n");
++	syslog(LOG_NOTICE, "using (%d+%d) as middle button, (%d+%d) as right button, (%d) as scroll.\n",
+ 		b2_mod, b2_key, b3_mod, b3_key, scroll_mod);
+-	printf("using %s.\n", uinputdev);
+ 
+-	
+ 	if (nofork)
+ 		goto startops;
+ 
+ 	fpid = fork();
+ 	if (fpid == -1) {
+-		printf("can't fork\n");
++		syslog(LOG_NOTICE, "can't fork\n");
+ 		goto startops;
+ 	}
+ 	if (fpid != 0) {
+@@ -711,7 +711,7 @@
+ 	setsid();
+ 	pid = fork();
+ 	if (pid == -1) {
+-		printf("can't fork\n");
++		syslog(LOG_NOTICE, "can't fork\n");
+ 		goto startops;
+ 	}
+ 
+@@ -745,7 +745,7 @@
+ 			}
+ 			
+ 		}
+-		printf("terminating, %i\n",answer);	
++		syslog(LOG_NOTICE, "terminating, %i\n",answer);	
+ 		if (kill(pid, SIGTERM)<0)
+ 			perror("mouseemu: termination of uinput handlers failed\n");
+ 			
+@@ -757,8 +757,6 @@
+ 	
+ 	//strncpy(argv[0],"mouseemu",argv0size);
+ startops:
+-	if (nofork)
+-		debug = 1;
+ 
+ 	for (i=0; i<EVENT_DEVS; i++) {
+ 		eventdevs[i].handle = -1;
+@@ -775,8 +773,8 @@
+ 
+ 	running = uinput_setup();
+ 	if (running < 0) {
+-		printf("mouseemu: Make sure uinput module is loaded or available "
+-			"in the kernel.\n");
++		syslog(LOG_NOTICE, "Make sure uinput module is loaded or available "
++		                   "in the kernel.\n");
+ 	}
+                                                          
+ 
+@@ -802,7 +800,7 @@
+ 				usleep(10);
+ 			else {
+ 				if (errno == ENODEV) {
+-					if (debug) fprintf(stderr, "select returned %d, errno %d, rescanning devices\n", val, errno);
++					debugf("device disconnect detected (select %d, errno %d), rescanning devices\n", val, errno);
+ 					errno = 0;
+ 					rescan_devs();
+ 					usleep(500);

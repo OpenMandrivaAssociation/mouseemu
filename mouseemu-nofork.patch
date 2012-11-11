@@ -1,0 +1,16 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 01_nofork.dpatch by  <gaudenz@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Don't kill ourselves if not forking into the background
+--- mouseemu/mouseemu.c	2005-03-30 08:40:30.000000000 +0200
++++ mouseemu-0.15/mouseemu.c	2005-04-21 00:37:23.836387521 +0200
+@@ -706,7 +724,7 @@
+ 		}
+ 		/* tell the parent we are running without problems */
+ 		/* What should we do if the parent is dead? */
+-		if (answer) {
++		if (answer && !nofork) {
+ 			answer=0;
+ 			kill(getppid(), SIGUSR1);
+ 		}

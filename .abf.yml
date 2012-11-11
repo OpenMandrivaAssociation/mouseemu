@@ -1,0 +1,5 @@
+sources:
+  "mouseemu-0.15.tar.bz2:"	123ec77b0f19f5c9387e2ff5740d3a757a92c9f2
+  "mouseemu.init:"	a87cdbea99304e324944ad5c829f2b740484b5a7
+  "mouseemu.rules:"	2c64417de048a0c6deae9bf47a774799cbe676ea
+  "mouseemu.sysconfig:"	037af6d2fd974e1e3a1becf4a367147af2db7394

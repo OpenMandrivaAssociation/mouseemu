@@ -1,0 +1,21 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 63_pidfile.dpatch.dpatch by Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: create pidfile in /var/run/mouseemu.pid
+--- mouseemu-0.15/mouseemu.c	2006-03-07 21:57:46.000000000 +0100
++++ mouseemu/mouseemu.c	2006-03-08 12:38:43.000000000 +0100
+@@ -771,7 +771,13 @@
+ 		 */
+ 			
+ 		sigset_t mask, oldmask;
++		FILE *pidfile;
+ 			       
++		/* write PID file so the user can signal us for device rescans */
++		pidfile = fopen("/var/run/mouseemu.pid", "w");
++		fprintf(pidfile, "%d\n", pid);
++		fclose(pidfile);
++
+ 		/*we start only after we received the first sigusr1 from child:*/
+ 
+ 		sigemptyset(&mask);
