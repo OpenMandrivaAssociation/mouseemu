@@ -5,7 +5,7 @@ Release:	%mkrel 5
 License:	GPL
 Group:		System/Configuration/Hardware
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-URL:		http://www.geekounet.org/powerbook/files
+URL:		https://www.geekounet.org/powerbook/files
 Source0:	http://www.geekounet.org/powerbook/files/%{name}-%{version}.tar.bz2
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
