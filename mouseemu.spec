@@ -23,6 +23,7 @@ Requires(pre):  /sbin/chkconfig
 Requires(pre):	rpm-helper
 Requires:	procps, udev
 
+BuildRequires:	make
 %description
 A program that will allows the keyboard to send mouse events.
 It can be used to configure right, middle and scroll buttons via 
